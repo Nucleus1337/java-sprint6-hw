@@ -199,4 +199,20 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getHistory() {
         return new ArrayList<>(historyManager.getHistory());
     }
+
+    protected HistoryManager getHistoryManager() {
+        return historyManager;
+    }
+
+    protected Map<Long, Task> getTaskIdToTask() {
+        return taskIdToTask;
+    }
+
+    protected Map<Long, Epic> getEpicIdToEpic() {
+        return epicIdToEpic;
+    }
+
+    protected Map<Long, Subtask> getSubtaskIdToSubtask() {
+        return subtaskIdToSubtask;
+    }
 }

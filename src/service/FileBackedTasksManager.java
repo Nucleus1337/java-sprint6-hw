@@ -5,6 +5,7 @@ import model.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -141,29 +142,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return super.getHistory();
     }
 
-    private void createTaskFromFile(Task task) {
-        super.createTask(task);
-    }
-
-    private void updateTaskFromFile(Task task) {
-        super.updateTask(task);
-    }
-
-    private void createEpicFromFile(Epic epic) {
-        super.createEpic(epic);
-    }
-
-    private void updateEpicFromFile(Epic epic) {
-        super.updateEpic(epic);
-    }
-
-    private void createSubtaskFromFile(Subtask subtask) {
-        super.createSubtask(subtask);
-    }
-
-    private void updateSubtaskFromFile(Subtask subtask) {
-        super.updateSubtask(subtask);
-    }
 
     private void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathToSave + fileName))) {
@@ -179,13 +157,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 writeTaskToFile(writer, task);
             }
 
-            StringBuilder tasksHistoryIds = new StringBuilder();
-            for (Task task : super.getHistory()) {
-                tasksHistoryIds.append(task.getId()).append(",");
-            }
+            String historyInString = historyToString(super.getHistoryManager());
 
             writer.newLine();
-            writer.write(tasksHistoryIds.toString());
+            writer.write(historyInString);
         } catch (IOException e) {
             System.out.printf("Не удалось найти путь для сохранения: %s\n", pathToSave + fileName);
         }
@@ -229,22 +204,40 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         FileBackedTasksManager tasksManager = new FileBackedTasksManager(file.getName());
 
         try {
-            for (String row : Files.readAllLines(Path.of(file.toURI()))) {
-                if (!row.isEmpty()) break;
+            List<String> rows = Files.readAllLines(Path.of(file.toURI()));
+
+            for (String row : rows) {
+                if (row.isEmpty()) break;
 
                 String[] elements = row.split(",");
 
-                if (TaskType.valueOf(elements[1]) == EPIC) {
-                    tasksManager.createEpicFromFile((Epic) taskFromString(row));
-                    tasksManager.updateEpicFromFile((Epic) taskFromString(row));
-                } else if (TaskType.valueOf(elements[1]) == SUBTASK) {
-                    tasksManager.createSubtaskFromFile((Subtask) taskFromString(row));
-                    tasksManager.updateSubtaskFromFile((Subtask) taskFromString(row));
-                } else {
-                    tasksManager.createTaskFromFile(taskFromString(row));
-                    tasksManager.updateTaskFromFile(taskFromString(row));
-                }
+                Task task = taskFromString(row);
+                long taskId = Long.parseLong(elements[0]);
 
+                if (TaskType.valueOf(elements[1]) == EPIC) {
+                    tasksManager.getEpicIdToEpic().put(taskId, (Epic) task);
+                } else if (TaskType.valueOf(elements[1]) == SUBTASK) {
+                    tasksManager.getSubtaskIdToSubtask().put(taskId, (Subtask) task);
+                } else {
+                    tasksManager.getTaskIdToTask().put(taskId, task);
+                }
+            }
+
+            String historyString = rows.get(rows.size() - 1);
+
+            List<Integer> history = historyFromString(historyString);
+            for (Integer taskId : history) {
+                tasksManager.getAllTasks().forEach(task -> {
+                    if (task.getId() == taskId) tasksManager.getHistoryManager().add(task);
+                });
+
+                tasksManager.getAllEpics().forEach(epic -> {
+                    if (epic.getId() == taskId) tasksManager.getHistoryManager().add(epic);
+                });
+
+                tasksManager.getAllSubtasks().forEach(subtask -> {
+                    if (subtask.getId() == taskId) tasksManager.getHistoryManager().add(subtask);
+                });
             }
         } catch (IOException e) {
             System.out.printf("Невозможно найти файл для загрузки: %s\n", file);
@@ -283,6 +276,26 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }
     }
 
+    private static String historyToString(HistoryManager manager) {
+        StringBuilder builder = new StringBuilder();
+        for (Task taskHistory : manager.getHistory()) {
+            builder.append(taskHistory.getId()).append(",");
+        }
+
+        return builder.toString();
+    }
+
+    private static List<Integer> historyFromString(String value) {
+        List<Integer> history = new LinkedList<>();
+        String[] elements = value.split(",");
+
+        for (String element : elements) {
+            history.add(Integer.parseInt(element));
+        }
+
+        return history;
+    }
+
     public static void main(String[] args) {
         FileBackedTasksManager manager = loadFromFile(new File("resources/fileToSave.csv"));
 
@@ -294,5 +307,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 //
 //        manager.getEpicById(2);
 //        manager.getTaskById(1);
+//
+//        manager.createEpic(new Epic("Epic4", "Epic4 desc")); /*4*/
     }
 }
