@@ -296,6 +296,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return history;
     }
 
+    /**
+     * запускает выполнение
+     * - рассматриваем работу в нормальных условиях
+     * -- если файл еще не существует, то следует разкоментировать создание тасков (файл будет создан автоматом)
+     * -- если файл создан следует закомментировать создание или создавать что-то иное
+     * @param args
+     */
     public static void main(String[] args) {
         FileBackedTasksManager manager = loadFromFile(new File("resources/fileToSave.csv"));
 
@@ -309,5 +316,13 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         manager.getTaskById(1);
 
         manager.createEpic(new Epic("Epic4", "Epic4 desc")); /*4*/
+
+        System.out.println("=====CREATED=====");
+        System.out.println("TASKS\n" + manager.getAllTasks());
+        System.out.println("EPICS\n" + manager.getAllEpics());
+        System.out.println("SUBTASKS\n" + manager.getAllSubtasks());
+
+        System.out.println("=====HISTORY=====");
+        System.out.println(manager.getHistory());
     }
 }
