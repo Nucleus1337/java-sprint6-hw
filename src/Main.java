@@ -9,7 +9,6 @@ import static model.TaskStatus.DONE;
 public class Main {
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
-        TaskManager taskManagerFiles = Managers.getDefault("fileToSave.csv");
 
         taskManager.createTask(new Task("Task1", "TaskDesc1")); /*1*/
         taskManager.createTask(new Task("Task2", "TaskDesc2")); /*2*/
@@ -87,9 +86,5 @@ public class Main {
 
         System.out.println("=====HISTORY CLEAR (epics)=====");
         System.out.println(taskManager.getHistory());
-
-        taskManagerFiles.createTask(new Task("Task8", "TaskDesc8")); /*8*/
-        taskManagerFiles.createEpic(new Epic("Epic9", "Epic9 desc")); /*9*/
-
     }
 }
