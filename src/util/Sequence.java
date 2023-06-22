@@ -6,4 +6,8 @@ public class Sequence {
     public static long getNextId() {
         return id++;
     }
+
+    public static void setStartId(long value) {
+        id = value;
+    }
 }

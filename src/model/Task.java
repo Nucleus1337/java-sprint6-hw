@@ -2,11 +2,14 @@ package model;
 
 import java.util.Objects;
 
+import static model.TaskType.TASK;
+
 public class Task {
     private String name;
     private String description;
     private TaskStatus status;
     private long id;
+    private TaskType type = TASK;
 
     public Task() {
     }
@@ -37,12 +40,13 @@ public class Task {
         return id == task.id
                 && Objects.equals(name, task.name)
                 && Objects.equals(description, task.description)
-                && Objects.equals(status, task.status);
+                && Objects.equals(status, task.status)
+                && Objects.equals(type, task.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, status, id);
+        return Objects.hash(name, description, status, id, type);
     }
 
     @Override
@@ -52,6 +56,7 @@ public class Task {
                 ", description='" + description + '\'' +
                 ", status='" + status.toString() + '\'' +
                 ", id=" + id +
+                ", type=" + type + '\'' +
                 '}' + "\n";
     }
 
@@ -85,5 +90,13 @@ public class Task {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public TaskType getType() {
+        return type;
+    }
+
+    public void setType(TaskType type) {
+        this.type = type;
     }
 }

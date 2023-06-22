@@ -3,20 +3,25 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+import static model.TaskType.EPIC;
+
 public class Epic extends Task {
-    private List<Long> subtaskId = new ArrayList<>();
+    private final List<Long> subtaskId = new ArrayList<>();
 
     public Epic(String name, String description, TaskStatus status, long id) {
         super(name, description, status, id);
+        super.setType(EPIC);
     }
 
     public Epic(String name, String description, TaskStatus status) {
         super(name, description, status);
+        super.setType(EPIC);
     }
 
     public Epic(String name, String desc) {
         super.setName(name);
         super.setDescription(desc);
+        super.setType(EPIC);
     }
 
     public List<Long> getSubtaskId() {
