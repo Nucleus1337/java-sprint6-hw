@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -153,14 +154,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 task.getDescription(),
                 task.getStatus());
 
-        if (task.getType() == EPIC) {
-            List<Long> epicsSubtasks = ((Epic) task).getSubtaskId();
-            String subtasks = epicsSubtasks.stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining(","));
-
-            row = row.concat(",").concat(subtasks);
-        } else if (task.getType() == SUBTASK) {
+        if (task.getType() == SUBTASK) {
             long epicId = ((Subtask) task).getEpicId();
 
             row = row.concat(",").concat(Long.toString(epicId));
@@ -180,6 +174,22 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 break;
             default:
                 tasksManager.getTaskIdToTask().put(taskId, task);
+        }
+    }
+
+    private static void addHistory(FileBackedTasksManager tasksManager, List<Integer> history) {
+        for (Integer taskId : history) {
+            Task task = findTask(tasksManager, taskId);
+            tasksManager.getHistoryManager().add(task);
+        }
+    }
+
+    private static void addSubtaskToEpic(FileBackedTasksManager tasksManager) {
+        for (Map.Entry<Long, Subtask> entry : tasksManager.getSubtaskIdToSubtask().entrySet()) {
+            final Subtask subtask = entry.getValue();
+            final Epic epic = tasksManager.getEpicIdToEpic().get(subtask.getEpicId());
+
+            epic.addSubtaskId(subtask.getId());
         }
     }
 
@@ -204,23 +214,19 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 if (row.isEmpty()) break;
 
                 Task task = taskFromString(row);
-                long taskId = task.getId();
-
-                sequenceValue = Math.max(sequenceValue, taskId);
-
                 addTask(tasksManager, task);
+
+                long taskId = task.getId();
+                sequenceValue = Math.max(sequenceValue, taskId);
             }
+
+            addSubtaskToEpic(tasksManager);
 
             Sequence.setStartId(sequenceValue + 1);
 
             String historyString = rows.get(rows.size() - 1);
-
             List<Integer> history = historyFromString(historyString);
-            for (Integer taskId : history) {
-                Task task = findTask(tasksManager, taskId);
-
-                tasksManager.getHistoryManager().add(task);
-            }
+            addHistory(tasksManager, history);
         } catch (IOException e) {
             System.out.printf("Невозможно найти файл для загрузки: %s\n", file);
         }
@@ -238,14 +244,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         final TaskStatus taskStatus = TaskStatus.valueOf(taskValues[4]);
         
         if (taskType == EPIC) {
-            Epic epic = new Epic(taskName, taskDescription, taskStatus, taskId);
-
-            for (int i = 5; i < taskValues.length; i++) {
-                final long subTaskId = Long.parseLong(taskValues[i]);
-                epic.addSubtaskId(subTaskId);
-            }
-
-            return epic;
+            return new Epic(taskName, taskDescription, taskStatus, taskId);
         } else if (taskType == SUBTASK) {
             final long epicId = Long.parseLong(taskValues[5]);
             return new Subtask(taskName, taskDescription, taskStatus, taskId, epicId);
