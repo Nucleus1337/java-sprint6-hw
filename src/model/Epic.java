@@ -43,6 +43,7 @@ public class Epic extends Task {
                 ", description='" + this.getDescription() + '\'' +
                 ", status='" + this.getStatus().toString() + '\'' +
                 ", id=" + this.getId() +
+                ", type=" + super.getType() + '\'' +
                 '}' + "\n";
     }
 }

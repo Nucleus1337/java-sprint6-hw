@@ -34,6 +34,7 @@ public class Subtask extends Task {
                 ", status='" + this.getStatus().toString() + '\'' +
                 ", id=" + this.getId() +
                 ", epicId=" + epicId +
+                ", type=" + super.getType() + '\'' +
                 '}' + "\n";
     }
 }
